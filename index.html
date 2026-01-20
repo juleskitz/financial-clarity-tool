@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Clarity Tool | Herramienta de Claridad Financiera</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #FAF7F2;
+            --color-bg-warm: #F5EFE6;
+            --color-text: #2D2A26;
+            --color-text-muted: #6B6560;
+            --color-accent: #C4704B;
+            --color-accent-light: #E8D4C4;
+            --color-success: #5B8A72;
+            --color-success-light: #E8F2ED;
+            --color-warning: #D4A44A;
+            --color-danger: #C45B5B;
+            --color-danger-light: #F9EDED;
+            --color-card: #FFFFFF;
+            --color-border: #E5DED4;
+            --color-sidebar: #2D2A26;
+            --color-sidebar-text: #FAF7F2;
+            --font-display: 'Fraunces', Georgia, serif;
+            --font-body: 'Source Sans 3', -apple-system, sans-serif;
+            --shadow-sm: 0 1px 3px rgba(45, 42, 38, 0.06);
+            --shadow-md: 0 4px 12px rgba(45, 42, 38, 0.08);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); line-height: 1.6; min-height: 100vh; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .app-layout { display: grid; grid-template-columns: 1fr 380px; min-height: 100vh; }
+        .main-content { padding: 32px 48px 80px; overflow-y: auto; }
+        .sidebar { background: var(--color-sidebar); color: var(--color-sidebar-text); padding: 32px 24px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; gap: 16px; }
+        .logo { font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--color-accent); }
+        .header-controls { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+        .exchange-rate-badge { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--color-success-light); border-radius: var(--radius-sm); font-size: 0.8125rem; }
+        .exchange-rate-badge.loading { animation: pulse 1.5s ease-in-out infinite; }
+        .exchange-rate-badge .label { color: var(--color-text-muted); }
+        .exchange-rate-badge .rate { font-weight: 600; color: var(--color-success); }
+        .language-toggle { display: flex; gap: 4px; background: var(--color-bg-warm); padding: 4px; border-radius: 8px; }
+        .currency-toggle { display: flex; gap: 4px; background: var(--color-bg-warm); padding: 4px; border-radius: 8px; }
+        .currency-toggle button { padding: 8px 14px; border: none; background: transparent; font-family: var(--font-body); font-size: 0.875rem; font-weight: 500; color: var(--color-text-muted); cursor: pointer; border-radius: 6px; transition: all 0.2s ease; }
+        .currency-toggle button.active { background: var(--color-card); color: var(--color-text); box-shadow: var(--shadow-sm); }
+        .cut-input { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+        .cut-input input { width: 120px; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 0.875rem; }
+        .cut-input .hint { font-size: 0.75rem; color: var(--color-text-muted); }
+        .other-actions { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .other-action-row { display: grid; grid-template-columns: 1fr 36px; gap: 10px; align-items: center; }
+        .other-action-row input { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9375rem; background: var(--color-card); }
+
+        .language-toggle button { padding: 8px 14px; border: none; background: transparent; font-family: var(--font-body); font-size: 0.875rem; font-weight: 500; color: var(--color-text-muted); cursor: pointer; border-radius: 6px; transition: all 0.2s ease; }
+        .language-toggle button.active { background: var(--color-card); color: var(--color-text); box-shadow: var(--shadow-sm); }
+        .section { background: var(--color-card); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+        .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+        .section-icon { width: 44px; height: 44px; background: var(--color-accent-light); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .section-title { font-family: var(--font-display); font-size: 1.375rem; font-weight: 500; }
+        .section-description { color: var(--color-text-muted); font-size: 0.9375rem; margin-bottom: 20px; }
+        .input-headers { display: grid; gap: 12px; margin-bottom: 8px; padding: 0 8px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
+        .input-headers.income-grid { grid-template-columns: 2fr 120px 80px 90px 36px; }
+        .input-headers.debt-grid { grid-template-columns: 2fr 120px 100px 70px 80px 36px; }
+        .input-headers.expense-grid { grid-template-columns: 2fr 120px 140px 80px 36px; }
+        .dynamic-list { display: flex; flex-direction: column; gap: 10px; }
+        .list-item { display: grid; gap: 12px; align-items: center; padding: 12px; background: var(--color-bg); border-radius: var(--radius-md); animation: fadeIn 0.3s ease-out; }
+        .list-item.income-grid { grid-template-columns: 2fr 120px 80px 90px 36px; }
+        .list-item.debt-grid { grid-template-columns: 2fr 120px 100px 70px 80px 36px; }
+        .list-item.expense-grid { grid-template-columns: 2fr 120px 140px 80px 36px; }
+        .list-item input, .list-item select { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 0.9375rem; background: var(--color-card); transition: all 0.2s ease; }
+        .list-item input:focus, .list-item select:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-light); }
+        .list-item input::placeholder { color: #B5AFA8; }
+        .currency-select { width: 80px !important; padding: 10px 6px !important; font-size: 0.8125rem !important; text-align: center; background: var(--color-bg-warm) !important; font-weight: 600; }
+        .currency-select.usd { background: var(--color-success-light) !important; color: var(--color-success); }
+        .remove-btn { width: 36px; height: 36px; border: none; background: transparent; color: var(--color-text-muted); cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.125rem; transition: all 0.2s ease; }
+        .remove-btn:hover { background: var(--color-danger-light); color: var(--color-danger); }
+        .add-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; background: transparent; border: 2px dashed var(--color-border); border-radius: var(--radius-md); color: var(--color-text-muted); font-family: var(--font-body); font-size: 0.9375rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; margin-top: 12px; }
+        .add-btn:hover { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-accent-light); }
+        .subsection { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--color-border); }
+        .subsection:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+        .subsection-title { font-family: var(--font-display); font-size: 1.125rem; font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .subsection-description { color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 16px; }
+        .cut-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--color-bg); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s ease; margin-bottom: 8px; border: 1px solid transparent; }
+        .cut-item:hover { background: var(--color-bg-warm); }
+        .cut-item.checked { background: var(--color-success-light); border-color: var(--color-success); }
+        .cut-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--color-success); cursor: pointer; }
+        .cut-item .details { flex: 1; }
+        .cut-item .name { font-weight: 500; }
+        .cut-item .amount { font-size: 0.8125rem; color: var(--color-text-muted); }
+        .priority-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+        .priority-option { padding: 12px 18px; border: 2px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-card); cursor: pointer; transition: all 0.2s ease; min-width: 140px; }
+        .priority-option:hover { border-color: var(--color-accent); }
+        .priority-option.selected { border-color: var(--color-accent); background: var(--color-accent-light); }
+        .priority-option .debt-name { font-weight: 500; margin-bottom: 2px; }
+        .priority-option .debt-amount { font-size: 0.8125rem; color: var(--color-text-muted); }
+        .attack-input { margin-top: 20px; padding: 16px; background: var(--color-bg); border-radius: var(--radius-md); }
+        .attack-input label { display: block; font-weight: 500; margin-bottom: 4px; }
+        .attack-input .hint { font-size: 0.8125rem; color: var(--color-text-muted); margin-bottom: 10px; }
+        .attack-input .input-row { display: flex; gap: 8px; max-width: 220px; }
+        .attack-input input { flex: 1; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: 1rem; }
+        .action-item { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--color-bg); border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 10px; transition: all 0.2s ease; }
+        .action-item:hover { background: var(--color-bg-warm); }
+        .action-item.checked { background: var(--color-success-light); }
+        .action-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--color-success); }
+        .checkin-input { margin-top: 20px; }
+        .checkin-input label { display: block; font-weight: 500; margin-bottom: 8px; }
+        .checkin-input input[type="date"] { padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 1rem; }
+        .sidebar-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; margin-bottom: 4px; }
+        .sidebar-subtitle { font-size: 0.8125rem; opacity: 0.6; }
+        .sidebar-section { margin-bottom: 28px; }
+        .sidebar-section-title { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; margin-bottom: 14px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-card { background: rgba(255,255,255,0.05); border-radius: var(--radius-sm); padding: 14px; }
+        .stat-card.full-width { grid-column: span 2; }
+        .stat-card.success { background: rgba(91, 138, 114, 0.2); border: 1px solid rgba(91, 138, 114, 0.3); }
+        .stat-card.danger { background: rgba(196, 91, 91, 0.2); border: 1px solid rgba(196, 91, 91, 0.3); }
+        .stat-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; margin-bottom: 4px; }
+        .stat-value { font-family: var(--font-display); font-size: 1.375rem; font-weight: 500; }
+        .stat-value.positive { color: #7BC9A6; }
+        .stat-value.negative { color: #E88A8A; }
+        .stat-value.small { font-size: 1rem; }
+        .sidebar-list { display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.05); border-radius: var(--radius-sm); font-size: 0.875rem; }
+        .sidebar-list-item.priority { background: rgba(196, 112, 75, 0.2); border: 1px solid rgba(196, 112, 75, 0.4); }
+        .sidebar-list-item .name { display: flex; align-items: center; gap: 8px; }
+        .priority-badge { background: var(--color-accent); color: white; font-size: 0.5625rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .commitment-box { background: rgba(91, 138, 114, 0.15); border: 1px solid rgba(91, 138, 114, 0.3); border-radius: var(--radius-md); padding: 18px; margin-top: 20px; }
+        .commitment-box h4 { font-family: var(--font-display); font-size: 0.9375rem; margin-bottom: 12px; color: #7BC9A6; }
+        .commitment-item { font-size: 0.8125rem; margin-bottom: 6px; opacity: 0.9; }
+        .commitment-item strong { opacity: 1; }
+        .print-btn { width: 100%; padding: 14px; background: var(--color-accent); color: white; border: none; border-radius: var(--radius-md); font-family: var(--font-body); font-size: 0.9375rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; transition: all 0.2s ease; }
+        .print-btn:hover { background: #B5633E; }
+        .empty-state { text-align: center; padding: 20px; opacity: 0.5; font-size: 0.875rem; }
+        @media (max-width: 1100px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .sidebar { position: fixed; bottom: 0; left: 0; right: 0; height: auto; max-height: 50vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.2); z-index: 100; }
+            .main-content { padding: 24px 20px 200px; }
+            .input-headers { display: none; }
+            .list-item.income-grid, .list-item.debt-grid, .list-item.expense-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media print {
+            .main-content { display: none; }
+            .sidebar { position: static; width: 100%; height: auto; max-height: none; padding: 40px; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useCallback } = React;
+
+        const translations = {
+            en: {
+                appName: "Financial Clarity",
+                english: "English", spanish: "Español",
+                officialRate: "Official Rate", loading: "Loading...",
+                incomeTitle: "Income", incomeDesc: "List all sources of money coming in this month.",
+                incomeSource: "Source", amount: "Amount", frequency: "Freq.", currency: "Curr.",
+                addIncome: "+ Add Income", regular: "Regular", irregular: "Irregular",
+                debtsTitle: "Debts", debtsDesc: "List every debt: credit cards, loans, family loans, store financing.",
+                creditor: "Creditor", totalOwed: "Total", minPayment: "Min. Pay", interest: "Int%",
+                addDebt: "+ Add Debt",
+                expensesTitle: "Monthly Expenses", expensesDesc: "List all recurring monthly expenses.",
+                expenseName: "Expense", category: "Category", addExpense: "+ Add Expense",
+                catRent: "Rent", catExpensas: "Building Fees", catUtilities: "Utilities",
+                catInternet: "Internet/Phone", catTransport: "Transport", catFood: "Food",
+                catEducation: "Education", catHealth: "Health/Prepaga", catSubscriptions: "Subscriptions",
+                catInsurance: "Insurance", catClothing: "Clothing", catEntertainment: "Entertainment", catOther: "Other",
+                decisionsTitle: "Decisions & Actions",
+                cutsSubtitle: "Emergency Cuts", cutsDesc: "Select expenses to cut THIS WEEK:",
+                noCutsAvailable: "Add expenses above first",
+                prioritySubtitle: "Priority Debt", priorityDesc: "Which debt will you attack first?",
+                noDebtsAvailable: "Add debts above first",
+                attackAmount: "Monthly Attack Amount", attackHint: "Extra beyond minimum payment:",
+                actionsSubtitle: "Actions Taken Today",
+                action1: "Cancelled at least one subscription",
+                action2: "Called at least one creditor",
+                action3: "Set up automatic payment",
+                nextCheckIn: "Next Check-in Date",
+                financialSnapshot: "Financial Snapshot", livePreview: "Live Preview",
+                overview: "Overview", monthlyIncome: "Monthly Income", monthlyExpenses: "Monthly Expenses",
+                monthlyBalance: "Balance", debtOverview: "Debt Overview", totalDebt: "Total Debt",
+                minPayments: "Min. Payments", debtToIncome: "Debt/Income", yourDebts: "Your Debts",
+                noDebts: "No debts added", yourPlan: "Your Plan", cutsSelected: "Cuts Selected",
+                potentialSavings: "Potential Savings", priorityDebt: "Priority Debt",
+                attackAmountLabel: "Monthly Attack", estPayoff: "Est. Payoff", months: "months",
+                nextReview: "Next Review", notSet: "Not set", commitment: "Your Commitment",
+                printReport: "Print Report", allInARS: "All amounts in ARS",
+                allInUSD: "All amounts in USD",
+                previewCurrency: "Preview Currency",
+                cutAmountLabel: "Cut amount", cutAmountHint: "Leave blank to cut 100%",
+                otherAction: "Other", addOtherAction: "+ Add Other", otherActionPlaceholder: "Describe what you did...",
+                surplus: "Surplus", deficit: "Deficit"
+            },
+            es: {
+                appName: "Claridad Financiera",
+                english: "English", spanish: "Español",
+                officialRate: "Dólar Oficial", loading: "Cargando...",
+                incomeTitle: "Ingresos", incomeDesc: "Listen todas las fuentes de dinero que entran este mes.",
+                incomeSource: "Fuente", amount: "Monto", frequency: "Frec.", currency: "Mon.",
+                addIncome: "+ Agregar Ingreso", regular: "Regular", irregular: "Irregular",
+                debtsTitle: "Deudas", debtsDesc: "Listen cada deuda: tarjetas, préstamos, familiares, financiación.",
+                creditor: "Acreedor", totalOwed: "Total", minPayment: "Pago Mín", interest: "Int%",
+                addDebt: "+ Agregar Deuda",
+                expensesTitle: "Gastos Mensuales", expensesDesc: "Listen todos los gastos mensuales recurrentes.",
+                expenseName: "Gasto", category: "Categoría", addExpense: "+ Agregar Gasto",
+                catRent: "Alquiler", catExpensas: "Expensas", catUtilities: "Servicios (Luz/Gas/Agua)",
+                catInternet: "Internet/Teléfono", catTransport: "Transporte (SUBE/Nafta)", catFood: "Comida/Super",
+                catEducation: "Educación", catHealth: "Salud/OSDE/Prepaga", catSubscriptions: "Suscripciones",
+                catInsurance: "Seguros", catClothing: "Ropa", catEntertainment: "Entretenimiento", catOther: "Otro",
+                decisionsTitle: "Decisiones y Acciones",
+                cutsSubtitle: "Cortes de Emergencia", cutsDesc: "Seleccionen gastos a cortar ESTA SEMANA:",
+                noCutsAvailable: "Agreguen gastos arriba primero",
+                prioritySubtitle: "Deuda Prioritaria", priorityDesc: "¿Cuál deuda van a atacar primero?",
+                noDebtsAvailable: "Agreguen deudas arriba primero",
+                attackAmount: "Monto de Ataque Mensual", attackHint: "Extra además del pago mínimo:",
+                actionsSubtitle: "Acciones Tomadas Hoy",
+                action1: "Cancelamos al menos una suscripción",
+                action2: "Llamamos a al menos un acreedor",
+                action3: "Configuramos pago automático",
+                nextCheckIn: "Próxima Revisión",
+                financialSnapshot: "Foto Financiera", livePreview: "Vista en Vivo",
+                overview: "Resumen", monthlyIncome: "Ingreso Mensual", monthlyExpenses: "Gastos Mensuales",
+                monthlyBalance: "Balance", debtOverview: "Resumen Deudas", totalDebt: "Deuda Total",
+                minPayments: "Pagos Mín.", debtToIncome: "Deuda/Ingreso", yourDebts: "Sus Deudas",
+                noDebts: "Sin deudas", yourPlan: "Su Plan", cutsSelected: "Cortes",
+                potentialSavings: "Ahorro Potencial", priorityDebt: "Deuda #1",
+                attackAmountLabel: "Ataque Mensual", estPayoff: "Est. Pago", months: "meses",
+                nextReview: "Próx. Revisión", notSet: "No definido", commitment: "Su Compromiso",
+                printReport: "Imprimir", allInARS: "Montos en ARS",
+                allInUSD: "Montos en USD",
+                previewCurrency: "Moneda de Vista",
+                cutAmountLabel: "Monto a cortar", cutAmountHint: "Dejar en blanco para cortar 100%",
+                otherAction: "Otro", addOtherAction: "+ Agregar Otro", otherActionPlaceholder: "Describí lo que hiciste...",
+                surplus: "Superávit", deficit: "Déficit"
+            }
+        };
+
+        const formatCurrency = (amount, locale='es-AR') => new Intl.NumberFormat(locale, { style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount || 0);
+
+        function App() {
+            const [lang, setLang] = useState('es');
+            const [previewCurrency, setPreviewCurrency] = useState('ARS');
+            const t = translations[lang];
+            const [exchangeRates, setExchangeRates] = useState({ official: 1050, loading: true });
+
+            useEffect(() => {
+                fetch('https://dolarapi.com/v1/dolares/oficial')
+                    .then(res => res.json())
+                    .then(data => setExchangeRates({ official: data.venta || 1050, loading: false }))
+                    .catch(() => setExchangeRates({ official: 1050, loading: false }));
+            }, []);
+
+            const [incomes, setIncomes] = useState([{ id: 1, source: '', amount: '', currency: 'ARS', frequency: 'regular' }]);
+            const [debts, setDebts] = useState([{ id: 1, creditor: '', total: '', currency: 'ARS', minPayment: '', interest: '' }]);
+            const [expenses, setExpenses] = useState([{ id: 1, name: '', amount: '', currency: 'ARS', category: 'catOther' }]);
+            const [selectedCuts, setSelectedCuts] = useState({});
+            const [priorityDebtId, setPriorityDebtId] = useState(null);
+            const [attackAmount, setAttackAmount] = useState('');
+            const [attackCurrency, setAttackCurrency] = useState('ARS');
+            const [actionsTaken, setActionsTaken] = useState({ cancelled: false, called: false, automated: false });
+            const [otherActions, setOtherActions] = useState([{ id: 1, text: '' }]);
+            const [nextCheckIn, setNextCheckIn] = useState('');
+
+            const toARS = useCallback((amount, currency) => {
+                const num = parseFloat(amount) || 0;
+                return currency === 'USD' ? num * exchangeRates.official : num;
+            }, [exchangeRates.official]);
+
+            const locale = lang === 'es' ? 'es-AR' : 'en-US';
+            const toPreview = useCallback((amountARS) => {
+                const num = parseFloat(amountARS) || 0;
+                return previewCurrency === 'USD' ? (num / (exchangeRates.official || 1)) : num;
+            }, [previewCurrency, exchangeRates.official]);
+            const previewPrefix = previewCurrency === 'USD' ? 'USD ' : '$';
+
+            const totalIncomeARS = useMemo(() => incomes.reduce((sum, i) => sum + toARS(i.amount, i.currency), 0), [incomes, toARS]);
+            const totalDebtARS = useMemo(() => debts.reduce((sum, d) => sum + toARS(d.total, d.currency), 0), [debts, toARS]);
+            const totalMinPaymentsARS = useMemo(() => debts.reduce((sum, d) => sum + toARS(d.minPayment, d.currency), 0), [debts, toARS]);
+            const totalExpensesARS = useMemo(() => expenses.reduce((sum, e) => sum + toARS(e.amount, e.currency), 0), [expenses, toARS]);
+            const monthlyBalance = useMemo(() => totalIncomeARS - totalExpensesARS - totalMinPaymentsARS, [totalIncomeARS, totalExpensesARS, totalMinPaymentsARS]);
+            const potentialSavingsARS = useMemo(() => {
+                return Object.entries(selectedCuts).reduce((sum, [idStr, cutAmountStr]) => {
+                    const id = Number(idStr);
+                    const e = expenses.find(x => x.id === id);
+                    if (!e) return sum;
+                    const full = parseFloat(e.amount) || 0;
+                    const raw = cutAmountStr === '' || cutAmountStr === null || cutAmountStr === undefined ? full : (parseFloat(cutAmountStr) || 0);
+                    const partial = Math.max(0, Math.min(raw, full));
+                    return sum + toARS(partial, e.currency);
+                }, 0);
+            }, [selectedCuts, expenses, toARS]);
+            const priorityDebt = useMemo(() => debts.find(d => d.id === priorityDebtId), [debts, priorityDebtId]);
+            const attackAmountARS = useMemo(() => toARS(attackAmount, attackCurrency), [attackAmount, attackCurrency, toARS]);
+            const monthsToPayoff = useMemo(() => {
+                if (!priorityDebt || !attackAmount) return null;
+                const total = toARS(priorityDebt.total, priorityDebt.currency);
+                const monthly = toARS(priorityDebt.minPayment, priorityDebt.currency) + attackAmountARS;
+                return monthly > 0 ? Math.ceil(total / monthly) : null;
+            }, [priorityDebt, attackAmountARS, toARS]);
+            const debtToIncomeRatio = useMemo(() => totalIncomeARS > 0 ? ((totalDebtARS / (totalIncomeARS * 12)) * 100).toFixed(0) : 0, [totalDebtARS, totalIncomeARS]);
+
+            const addIncome = () => setIncomes([...incomes, { id: Date.now(), source: '', amount: '', currency: 'ARS', frequency: 'regular' }]);
+            const updateIncome = (id, field, value) => setIncomes(incomes.map(i => i.id === id ? { ...i, [field]: value } : i));
+            const removeIncome = (id) => incomes.length > 1 && setIncomes(incomes.filter(i => i.id !== id));
+
+            const addDebt = () => setDebts([...debts, { id: Date.now(), creditor: '', total: '', currency: 'ARS', minPayment: '', interest: '' }]);
+            const updateDebt = (id, field, value) => setDebts(debts.map(d => d.id === id ? { ...d, [field]: value } : d));
+            const removeDebt = (id) => { if (debts.length > 1) { setDebts(debts.filter(d => d.id !== id)); if (priorityDebtId === id) setPriorityDebtId(null); }};
+
+            const addExpense = () => setExpenses([...expenses, { id: Date.now(), name: '', amount: '', currency: 'ARS', category: 'catOther' }]);
+            const updateExpense = (id, field, value) => setExpenses(expenses.map(e => e.id === id ? { ...e, [field]: value } : e));
+            const removeExpense = (id) => {
+                if (expenses.length > 1) {
+                    setExpenses(expenses.filter(e => e.id !== id));
+                    setSelectedCuts(prev => { const next = { ...prev }; delete next[id]; return next; });
+                }
+            };
+
+            const toggleCut = (id) => setSelectedCuts(prev => {
+                const next = { ...prev };
+                if (next[id] !== undefined) delete next[id];
+                else next[id] = '';
+                return next;
+            });
+            const updateCutAmount = (id, value) => setSelectedCuts(prev => ({ ...prev, [id]: value }));
+
+            const categories = ['catRent', 'catExpensas', 'catUtilities', 'catInternet', 'catTransport', 'catFood', 'catEducation', 'catHealth', 'catSubscriptions', 'catInsurance', 'catClothing', 'catEntertainment', 'catOther'];
+            const validExpenses = expenses.filter(e => e.name && e.amount);
+            const validDebts = debts.filter(d => d.creditor && d.total);
+
+            return (
+                <div className="app-layout">
+                    <div className="main-content">
+                        <header className="header">
+                            <div className="logo">✦ {t.appName}</div>
+                            <div className="header-controls">
+                                <div className={`exchange-rate-badge ${exchangeRates.loading ? 'loading' : ''}`}>
+                                    <span className="label">{t.officialRate}:</span>
+                                    <span className="rate">{exchangeRates.loading ? t.loading : `$${formatCurrency(exchangeRates.official, locale)}`}</span>
+                                </div>
+                                <div className="currency-toggle">
+                                    <button className={previewCurrency === 'ARS' ? 'active' : ''} onClick={() => setPreviewCurrency('ARS')}>ARS</button>
+                                    <button className={previewCurrency === 'USD' ? 'active' : ''} onClick={() => setPreviewCurrency('USD')}>USD</button>
+                                </div>
+                                <div className="language-toggle">
+                                    <button className={lang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>{t.english}</button>
+                                    <button className={lang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>{t.spanish}</button>
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* Income Section */}
+                        <section className="section animate-fade-in">
+                            <div className="section-header">
+                                <div className="section-icon">💰</div>
+                                <h2 className="section-title">{t.incomeTitle}</h2>
+                            </div>
+                            <p className="section-description">{t.incomeDesc}</p>
+                            <div className="input-headers income-grid">
+                                <div>{t.incomeSource}</div><div>{t.amount}</div><div>{t.currency}</div><div>{t.frequency}</div><div></div>
+                            </div>
+                            <div className="dynamic-list">
+                                {incomes.map((income) => (
+                                    <div key={income.id} className="list-item income-grid">
+                                        <input type="text" placeholder={lang === 'es' ? 'Ej: Sueldo...' : 'E.g., Salary...'} value={income.source} onChange={(e) => updateIncome(income.id, 'source', e.target.value)} />
+                                        <input type="number" placeholder="0" value={income.amount} onChange={(e) => updateIncome(income.id, 'amount', e.target.value)} />
+                                        <select className={`currency-select ${income.currency === 'USD' ? 'usd' : ''}`} value={income.currency} onChange={(e) => updateIncome(income.id, 'currency', e.target.value)}>
+                                            <option value="ARS">ARS</option><option value="USD">USD</option>
+                                        </select>
+                                        <select value={income.frequency} onChange={(e) => updateIncome(income.id, 'frequency', e.target.value)}>
+                                            <option value="regular">{t.regular}</option><option value="irregular">{t.irregular}</option>
+                                        </select>
+                                        <button className="remove-btn" onClick={() => removeIncome(income.id)}>✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="add-btn" onClick={addIncome}>{t.addIncome}</button>
+                        </section>
+
+                        {/* Debts Section */}
+                        <section className="section animate-fade-in">
+                            <div className="section-header">
+                                <div className="section-icon">📋</div>
+                                <h2 className="section-title">{t.debtsTitle}</h2>
+                            </div>
+                            <p className="section-description">{t.debtsDesc}</p>
+                            <div className="input-headers debt-grid">
+                                <div>{t.creditor}</div><div>{t.totalOwed}</div><div>{t.minPayment}</div><div>{t.interest}</div><div>{t.currency}</div><div></div>
+                            </div>
+                            <div className="dynamic-list">
+                                {debts.map((debt) => (
+                                    <div key={debt.id} className="list-item debt-grid">
+                                        <input type="text" placeholder={lang === 'es' ? 'Ej: Visa...' : 'E.g., Visa...'} value={debt.creditor} onChange={(e) => updateDebt(debt.id, 'creditor', e.target.value)} />
+                                        <input type="number" placeholder="0" value={debt.total} onChange={(e) => updateDebt(debt.id, 'total', e.target.value)} />
+                                        <input type="number" placeholder="0" value={debt.minPayment} onChange={(e) => updateDebt(debt.id, 'minPayment', e.target.value)} />
+                                        <input type="number" placeholder="%" value={debt.interest} onChange={(e) => updateDebt(debt.id, 'interest', e.target.value)} style={{width:'60px'}} />
+                                        <select className={`currency-select ${debt.currency === 'USD' ? 'usd' : ''}`} value={debt.currency} onChange={(e) => updateDebt(debt.id, 'currency', e.target.value)}>
+                                            <option value="ARS">ARS</option><option value="USD">USD</option>
+                                        </select>
+                                        <button className="remove-btn" onClick={() => removeDebt(debt.id)}>✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="add-btn" onClick={addDebt}>{t.addDebt}</button>
+                        </section>
+
+                        {/* Expenses Section */}
+                        <section className="section animate-fade-in">
+                            <div className="section-header">
+                                <div className="section-icon">🛒</div>
+                                <h2 className="section-title">{t.expensesTitle}</h2>
+                            </div>
+                            <p className="section-description">{t.expensesDesc}</p>
+                            <div className="input-headers expense-grid">
+                                <div>{t.expenseName}</div><div>{t.amount}</div><div>{t.category}</div><div>{t.currency}</div><div></div>
+                            </div>
+                            <div className="dynamic-list">
+                                {expenses.map((expense) => (
+                                    <div key={expense.id} className="list-item expense-grid">
+                                        <input type="text" placeholder={lang === 'es' ? 'Ej: Alquiler...' : 'E.g., Rent...'} value={expense.name} onChange={(e) => updateExpense(expense.id, 'name', e.target.value)} />
+                                        <input type="number" placeholder="0" value={expense.amount} onChange={(e) => updateExpense(expense.id, 'amount', e.target.value)} />
+                                        <select value={expense.category} onChange={(e) => updateExpense(expense.id, 'category', e.target.value)}>
+                                            {categories.map(cat => <option key={cat} value={cat}>{t[cat]}</option>)}
+                                        </select>
+                                        <select className={`currency-select ${expense.currency === 'USD' ? 'usd' : ''}`} value={expense.currency} onChange={(e) => updateExpense(expense.id, 'currency', e.target.value)}>
+                                            <option value="ARS">ARS</option><option value="USD">USD</option>
+                                        </select>
+                                        <button className="remove-btn" onClick={() => removeExpense(expense.id)}>✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                            <button className="add-btn" onClick={addExpense}>{t.addExpense}</button>
+                        </section>
+
+                        {/* Decisions Section */}
+                        <section className="section animate-fade-in">
+                            <div className="section-header">
+                                <div className="section-icon">🎯</div>
+                                <h2 className="section-title">{t.decisionsTitle}</h2>
+                            </div>
+
+                            <div className="subsection">
+                                <h3 className="subsection-title">✂️ {t.cutsSubtitle}</h3>
+                                <p className="subsection-description">{t.cutsDesc}</p>
+                                {validExpenses.length === 0 ? <div className="empty-state">{t.noCutsAvailable}</div> : validExpenses.map((expense) => (
+                                    <div key={expense.id} className={`cut-item ${selectedCuts[expense.id] !== undefined ? 'checked' : ''}`} onClick={() => toggleCut(expense.id)}>
+                                        <input type="checkbox" checked={selectedCuts[expense.id] !== undefined} onChange={() => {}} />
+                                        <div className="details">
+                                            <div className="name">{expense.name}</div>
+                                            <div className="amount">{expense.currency === 'USD' ? 'USD ' : '$'}{formatCurrency(expense.amount, locale)}{expense.currency === 'USD' && ` (≈$${formatCurrency(toARS(expense.amount, 'USD'), locale)})`}</div>
+                                            {selectedCuts[expense.id] !== undefined && (
+                                                <div className="cut-input" onClick={(e) => e.stopPropagation()}>
+                                                    <input
+                                                        type="number"
+                                                        placeholder={t.cutAmountLabel}
+                                                        value={selectedCuts[expense.id]}
+                                                        onChange={(e) => updateCutAmount(expense.id, e.target.value)}
+                                                    />
+                                                    <span className="hint">{t.cutAmountHint}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="subsection">
+                                <h3 className="subsection-title">🥊 {t.prioritySubtitle}</h3>
+                                <p className="subsection-description">{t.priorityDesc}</p>
+                                {validDebts.length === 0 ? <div className="empty-state">{t.noDebtsAvailable}</div> : (
+                                    <>
+                                        <div className="priority-selector">
+                                            {validDebts.map((debt) => (
+                                                <div key={debt.id} className={`priority-option ${priorityDebtId === debt.id ? 'selected' : ''}`} onClick={() => setPriorityDebtId(debt.id)}>
+                                                    <div className="debt-name">{debt.creditor}</div>
+                                                    <div className="debt-amount">{debt.currency === 'USD' ? 'USD ' : '$'}{formatCurrency(debt.total)}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {priorityDebtId && (
+                                            <div className="attack-input">
+                                                <label>{t.attackAmount}</label>
+                                                <p className="hint">{t.attackHint}</p>
+                                                <div className="input-row">
+                                                    <input type="number" placeholder="0" value={attackAmount} onChange={(e) => setAttackAmount(e.target.value)} />
+                                                    <select className={`currency-select ${attackCurrency === 'USD' ? 'usd' : ''}`} value={attackCurrency} onChange={(e) => setAttackCurrency(e.target.value)} style={{width:'80px'}}>
+                                                        <option value="ARS">ARS</option><option value="USD">USD</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="subsection">
+                                <h3 className="subsection-title">✅ {t.actionsSubtitle}</h3>
+                                <div className={`action-item ${actionsTaken.cancelled ? 'checked' : ''}`} onClick={() => setActionsTaken({ ...actionsTaken, cancelled: !actionsTaken.cancelled })}>
+                                    <input type="checkbox" checked={actionsTaken.cancelled} onChange={() => {}} /><span>{t.action1}</span>
+                                </div>
+                                <div className={`action-item ${actionsTaken.called ? 'checked' : ''}`} onClick={() => setActionsTaken({ ...actionsTaken, called: !actionsTaken.called })}>
+                                    <input type="checkbox" checked={actionsTaken.called} onChange={() => {}} /><span>{t.action2}</span>
+                                </div>
+                                <div className={`action-item ${actionsTaken.automated ? 'checked' : ''}`} onClick={() => setActionsTaken({ ...actionsTaken, automated: !actionsTaken.automated })}>
+                                    <input type="checkbox" checked={actionsTaken.automated} onChange={() => {}} /><span>{t.action3}</span>
+                                </div>
+                                <div className="other-actions">
+                                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:'10px'}}
+                                         onClick={(e) => e.stopPropagation()}>
+                                        <span style={{fontWeight:500}}>{t.otherAction}</span>
+                                        <button className="add-btn" style={{marginTop:0,padding:'10px 14px'}} onClick={() => setOtherActions(prev => ([...prev, { id: Date.now(), text: '' }]))}>{t.addOtherAction}</button>
+                                    </div>
+                                    {otherActions.map((oa) => (
+                                        <div key={oa.id} className="other-action-row" onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="text"
+                                                placeholder={t.otherActionPlaceholder}
+                                                value={oa.text}
+                                                onChange={(e) => setOtherActions(prev => prev.map(x => x.id === oa.id ? ({...x, text: e.target.value}) : x))}
+                                            />
+                                            <button className="remove-btn" onClick={() => setOtherActions(prev => prev.length > 1 ? prev.filter(x => x.id !== oa.id) : prev)}>✕</button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="checkin-input">
+                                    <label>{t.nextCheckIn}</label>
+                                    <input type="date" value={nextCheckIn} onChange={(e) => setNextCheckIn(e.target.value)} />
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Sidebar */}
+                    <aside className="sidebar">
+                        <div className="sidebar-header">
+                            <h2 className="sidebar-title">{t.financialSnapshot}</h2>
+                            <p className="sidebar-subtitle">{t.livePreview} • {previewCurrency === 'USD' ? t.allInUSD : t.allInARS}</p>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3 className="sidebar-section-title">{t.overview}</h3>
+                            <div className="stat-grid">
+                                <div className="stat-card"><div className="stat-label">{t.monthlyIncome}</div><div className="stat-value">{previewPrefix}{formatCurrency(toPreview(totalIncomeARS), locale)}</div></div>
+                                <div className="stat-card"><div className="stat-label">{t.monthlyExpenses}</div><div className="stat-value">{previewPrefix}{formatCurrency(toPreview(totalExpensesARS + totalMinPaymentsARS), locale)}</div></div>
+                                <div className={`stat-card full-width ${monthlyBalance >= 0 ? 'success' : 'danger'}`}>
+                                    <div className="stat-label">{t.monthlyBalance}</div>
+                                    <div className={`stat-value ${monthlyBalance >= 0 ? 'positive' : 'negative'}`}>
+                                        {monthlyBalance >= 0 ? '+' : ''}{previewPrefix}{formatCurrency(toPreview(monthlyBalance), locale)}
+                                        <span style={{fontSize:'0.75rem',opacity:0.7,marginLeft:'8px'}}>({monthlyBalance >= 0 ? t.surplus : t.deficit})</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3 className="sidebar-section-title">{t.debtOverview}</h3>
+                            <div className="stat-grid">
+                                <div className="stat-card danger"><div className="stat-label">{t.totalDebt}</div><div className="stat-value negative">{previewPrefix}{formatCurrency(toPreview(totalDebtARS), locale)}</div></div>
+                                <div className="stat-card"><div className="stat-label">{t.minPayments}</div><div className="stat-value small">{previewPrefix}{formatCurrency(toPreview(totalMinPaymentsARS), locale)}</div></div>
+                                <div className="stat-card full-width"><div className="stat-label">{t.debtToIncome}</div><div className="stat-value">{debtToIncomeRatio}%</div></div>
+                            </div>
+                            <h4 className="sidebar-section-title" style={{marginTop:'16px'}}>{t.yourDebts}</h4>
+                            <div className="sidebar-list">
+                                {validDebts.length === 0 ? <div className="empty-state">{t.noDebts}</div> : validDebts.map((debt) => (
+                                    <div key={debt.id} className={`sidebar-list-item ${debt.id === priorityDebtId ? 'priority' : ''}`}>
+                                        <span className="name">{debt.creditor}{debt.id === priorityDebtId && <span className="priority-badge">#1</span>}</span>
+                                        <span>{previewPrefix}{formatCurrency(toPreview(toARS(debt.total, debt.currency)), locale)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="sidebar-section">
+                            <h3 className="sidebar-section-title">{t.yourPlan}</h3>
+                            <div className="stat-grid">
+                                <div className="stat-card"><div className="stat-label">{t.cutsSelected}</div><div className="stat-value">{Object.keys(selectedCuts).length}</div></div>
+                                <div className="stat-card success"><div className="stat-label">{t.potentialSavings}</div><div className="stat-value positive">{previewPrefix}{formatCurrency(toPreview(potentialSavingsARS), locale)}</div></div>
+                            </div>
+                            {priorityDebt && (
+                                <div className="commitment-box">
+                                    <h4>{t.commitment}</h4>
+                                    <p className="commitment-item"><strong>{t.priorityDebt}:</strong> {priorityDebt.creditor}</p>
+                                    <p className="commitment-item"><strong>{t.attackAmountLabel}:</strong> {previewPrefix}{formatCurrency(toPreview(toARS(priorityDebt.minPayment, priorityDebt.currency) + attackAmountARS), locale)}</p>
+                                    {monthsToPayoff && <p className="commitment-item"><strong>{t.estPayoff}:</strong> {monthsToPayoff} {t.months}</p>}
+                                    <p className="commitment-item"><strong>{t.nextReview}:</strong> {nextCheckIn ? new Date(nextCheckIn).toLocaleDateString(lang === 'es' ? 'es-AR' : 'en-US') : t.notSet}</p>
+                                </div>
+                            )}
+                        </div>
+                        <button className="print-btn" onClick={() => window.print()}>🖨️ {t.printReport}</button>
+                    </aside>
+                </div>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
